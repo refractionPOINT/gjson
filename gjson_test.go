@@ -270,35 +270,35 @@ func TestByteSafety(t *testing.T) {
 	}
 }
 
-func get(json, path string) Result {
+func testGet(json, path string) Result {
 	return GetBytes([]byte(json), path)
 }
 
 func TestBasic(t *testing.T) {
 	var mtok Result
-	mtok = get(basicJSON, `loggy.programmers.#[tag="good"].firstName`)
+	mtok = testGet(basicJSON, `loggy.programmers.#[tag="good"].firstName`)
 	if mtok.String() != "Brett" {
 		t.Fatalf("expected %v, got %v", "Brett", mtok.String())
 	}
-	mtok = get(basicJSON, `loggy.programmers.#[tag="good"]#.firstName`)
+	mtok = testGet(basicJSON, `loggy.programmers.#[tag="good"]#.firstName`)
 	if mtok.String() != `["Brett","Elliotte"]` {
 		t.Fatalf("expected %v, got %v", `["Brett","Elliotte"]`, mtok.String())
 	}
 }
 
 func TestIsArrayIsObject(t *testing.T) {
-	mtok := get(basicJSON, "loggy")
+	mtok := testGet(basicJSON, "loggy")
 	assert(t, mtok.IsObject())
 	assert(t, !mtok.IsArray())
 
-	mtok = get(basicJSON, "loggy.programmers")
+	mtok = testGet(basicJSON, "loggy.programmers")
 	assert(t, !mtok.IsObject())
 	assert(t, mtok.IsArray())
 
-	mtok = get(basicJSON, `loggy.programmers.#[tag="good"]#.firstName`)
+	mtok = testGet(basicJSON, `loggy.programmers.#[tag="good"]#.firstName`)
 	assert(t, mtok.IsArray())
 
-	mtok = get(basicJSON, `loggy.programmers.0.firstName`)
+	mtok = testGet(basicJSON, `loggy.programmers.0.firstName`)
 	assert(t, !mtok.IsObject())
 	assert(t, !mtok.IsArray())
 }
@@ -432,7 +432,7 @@ func TestMap(t *testing.T) {
 	assert(t, Result{Type: JSON, Raw: "{"}.Map() != nil)
 }
 func TestBasic1(t *testing.T) {
-	mtok := get(basicJSON, `loggy.programmers`)
+	mtok := testGet(basicJSON, `loggy.programmers`)
 	var count int
 	mtok.ForEach(func(key, value Result) bool {
 		assert(t, key.Exists())
@@ -475,28 +475,28 @@ func TestBasic1(t *testing.T) {
 	}
 }
 func TestBasic2(t *testing.T) {
-	mtok := get(basicJSON, `loggy.programmers.#[age=101].firstName`)
+	mtok := testGet(basicJSON, `loggy.programmers.#[age=101].firstName`)
 	if mtok.String() != "1002.3" {
 		t.Fatalf("expected %v, got %v", "1002.3", mtok.String())
 	}
-	mtok = get(basicJSON,
+	mtok = testGet(basicJSON,
 		`loggy.programmers.#[firstName != "Brett"].firstName`)
 	if mtok.String() != "Jason" {
 		t.Fatalf("expected %v, got %v", "Jason", mtok.String())
 	}
-	mtok = get(basicJSON, `loggy.programmers.#[firstName % "Bre*"].email`)
+	mtok = testGet(basicJSON, `loggy.programmers.#[firstName % "Bre*"].email`)
 	if mtok.String() != "aaaa" {
 		t.Fatalf("expected %v, got %v", "aaaa", mtok.String())
 	}
-	mtok = get(basicJSON, `loggy.programmers.#[firstName !% "Bre*"].email`)
+	mtok = testGet(basicJSON, `loggy.programmers.#[firstName !% "Bre*"].email`)
 	if mtok.String() != "bbbb" {
 		t.Fatalf("expected %v, got %v", "bbbb", mtok.String())
 	}
-	mtok = get(basicJSON, `loggy.programmers.#[firstName == "Brett"].email`)
+	mtok = testGet(basicJSON, `loggy.programmers.#[firstName == "Brett"].email`)
 	if mtok.String() != "aaaa" {
 		t.Fatalf("expected %v, got %v", "aaaa", mtok.String())
 	}
-	mtok = get(basicJSON, "loggy")
+	mtok = testGet(basicJSON, "loggy")
 	if mtok.Type != JSON {
 		t.Fatalf("expected %v, got %v", JSON, mtok.Type)
 	}
@@ -532,7 +532,7 @@ func TestBasic3(t *testing.T) {
 	if token = Parse(`"\"he\nllo\""`); token.Str != "\"he\nllo\"" {
 		t.Fatalf("expected %v, got %v", "\"he\nllo\"", token.Str)
 	}
-	mtok = get(basicJSON, "loggy.programmers.#.firstName")
+	mtok = testGet(basicJSON, "loggy.programmers.#.firstName")
 	if len(mtok.Array()) != 4 {
 		t.Fatalf("expected 4, got %v", len(mtok.Array()))
 	}
@@ -541,7 +541,7 @@ func TestBasic3(t *testing.T) {
 			t.Fatalf("expected '%v', got '%v'", ex, mtok.Array()[i].String())
 		}
 	}
-	mtok = get(basicJSON, "loggy.programmers.#.asd")
+	mtok = testGet(basicJSON, "loggy.programmers.#.asd")
 	if mtok.Type != JSON {
 		t.Fatalf("expected %v, got %v", JSON, mtok.Type)
 	}
@@ -550,42 +550,42 @@ func TestBasic3(t *testing.T) {
 	}
 }
 func TestBasic4(t *testing.T) {
-	if get(basicJSON, "items.3.tags.#").Num != 3 {
-		t.Fatalf("expected 3, got %v", get(basicJSON, "items.3.tags.#").Num)
+	if testGet(basicJSON, "items.3.tags.#").Num != 3 {
+		t.Fatalf("expected 3, got %v", testGet(basicJSON, "items.3.tags.#").Num)
 	}
-	if get(basicJSON, "items.3.points.1.#").Num != 2 {
+	if testGet(basicJSON, "items.3.points.1.#").Num != 2 {
 		t.Fatalf("expected 2, got %v",
-			get(basicJSON, "items.3.points.1.#").Num)
+			testGet(basicJSON, "items.3.points.1.#").Num)
 	}
-	if get(basicJSON, "items.#").Num != 8 {
-		t.Fatalf("expected 6, got %v", get(basicJSON, "items.#").Num)
+	if testGet(basicJSON, "items.#").Num != 8 {
+		t.Fatalf("expected 6, got %v", testGet(basicJSON, "items.#").Num)
 	}
-	if get(basicJSON, "vals.#").Num != 4 {
-		t.Fatalf("expected 4, got %v", get(basicJSON, "vals.#").Num)
+	if testGet(basicJSON, "vals.#").Num != 4 {
+		t.Fatalf("expected 4, got %v", testGet(basicJSON, "vals.#").Num)
 	}
-	if !get(basicJSON, "name.last").Exists() {
+	if !testGet(basicJSON, "name.last").Exists() {
 		t.Fatal("expected true, got false")
 	}
-	token := get(basicJSON, "name.here")
+	token := testGet(basicJSON, "name.here")
 	if token.String() != "B\\\"R" {
 		t.Fatal("expecting 'B\\\"R'", "got", token.String())
 	}
-	token = get(basicJSON, "arr.#")
+	token = testGet(basicJSON, "arr.#")
 	if token.String() != "6" {
 		fmt.Printf("%#v\n", token)
 		t.Fatal("expecting 6", "got", token.String())
 	}
-	token = get(basicJSON, "arr.3.hello")
+	token = testGet(basicJSON, "arr.3.hello")
 	if token.String() != "world" {
 		t.Fatal("expecting 'world'", "got", token.String())
 	}
 	_ = token.Value().(string)
-	token = get(basicJSON, "name.first")
+	token = testGet(basicJSON, "name.first")
 	if token.String() != "tom" {
 		t.Fatal("expecting 'tom'", "got", token.String())
 	}
 	_ = token.Value().(string)
-	token = get(basicJSON, "name.last")
+	token = testGet(basicJSON, "name.last")
 	if token.String() != "" {
 		t.Fatal("expecting ''", "got", token.String())
 	}
@@ -594,33 +594,33 @@ func TestBasic4(t *testing.T) {
 	}
 }
 func TestBasic5(t *testing.T) {
-	token := get(basicJSON, "age")
+	token := testGet(basicJSON, "age")
 	if token.String() != "100" {
 		t.Fatal("expecting '100'", "got", token.String())
 	}
 	_ = token.Value().(float64)
-	token = get(basicJSON, "happy")
+	token = testGet(basicJSON, "happy")
 	if token.String() != "true" {
 		t.Fatal("expecting 'true'", "got", token.String())
 	}
 	_ = token.Value().(bool)
-	token = get(basicJSON, "immortal")
+	token = testGet(basicJSON, "immortal")
 	if token.String() != "false" {
 		t.Fatal("expecting 'false'", "got", token.String())
 	}
 	_ = token.Value().(bool)
-	token = get(basicJSON, "noop")
+	token = testGet(basicJSON, "noop")
 	if token.String() != `{"what is a wren?":"a bird"}` {
 		t.Fatal("expecting '"+`{"what is a wren?":"a bird"}`+"'", "got",
 			token.String())
 	}
 	_ = token.Value().(map[string]interface{})
 
-	if get(basicJSON, "").Value() != nil {
+	if testGet(basicJSON, "").Value() != nil {
 		t.Fatal("should be nil")
 	}
 
-	get(basicJSON, "vals.hello")
+	testGet(basicJSON, "vals.hello")
 
 	type msi = map[string]interface{}
 	type fi = []interface{}
