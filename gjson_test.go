@@ -1928,6 +1928,16 @@ func TestFlatten(t *testing.T) {
 	assert(t, Get(`{"9999":1234}`, "@flatten").String() == `{"9999":1234}`)
 }
 
+func TestCustomFlatten(t *testing.T) {
+	m := GetBaseModifiers()
+	m["myflatten"] = m["flatten"]
+	c := NewWithModifiers(m)
+	json := `[1,[2],[3,4],[5,[6,[7]]],{"hi":"there"},8,[9]]`
+	assert(t, c.Get(json, "@myflatten").String() == `[1,2,3,4,5,[6,[7]],{"hi":"there"},8,9]`)
+	assert(t, c.Get(json, `@myflatten:{"deep":true}`).String() == `[1,2,3,4,5,6,7,{"hi":"there"},8,9]`)
+	assert(t, c.Get(`{"9999":1234}`, "@myflatten").String() == `{"9999":1234}`)
+}
+
 func TestJoin(t *testing.T) {
 	assert(t, Get(`[{},{}]`, "@join").String() == `{}`)
 	assert(t, Get(`[{"a":1},{"b":2}]`, "@join").String() == `{"a":1,"b":2}`)

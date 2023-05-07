@@ -768,7 +768,7 @@ type arrayPathResult struct {
 	}
 }
 
-func parseArrayPath(path string) (r arrayPathResult) {
+func parseArrayPath(mods ModifierDescriptor, path string) (r arrayPathResult) {
 	for i := 0; i < len(path); i++ {
 		if path[i] == '|' {
 			r.part = path[:i]
@@ -778,7 +778,7 @@ func parseArrayPath(path string) (r arrayPathResult) {
 		}
 		if path[i] == '.' {
 			r.part = path[:i]
-			if !r.arrch && i < len(path)-1 && isDotPiperChar(path[i+1:]) {
+			if !r.arrch && i < len(path)-1 && isDotPiperChar(mods, path[i+1:]) {
 				r.pipe = path[i+1:]
 				r.piped = true
 			} else {
@@ -948,7 +948,7 @@ right:
 }
 
 // peek at the next byte and see if it's a '@', '[', or '{'.
-func isDotPiperChar(s string) bool {
+func isDotPiperChar(mods ModifierDescriptor, s string) bool {
 	if DisableModifiers {
 		return false
 	}
@@ -961,7 +961,7 @@ func isDotPiperChar(s string) bool {
 				break
 			}
 		}
-		_, ok := modifiers[s[1:i]]
+		_, ok := mods[s[1:i]]
 		return ok
 	}
 	return c == '[' || c == '{'
@@ -976,7 +976,7 @@ type objectPathResult struct {
 	more  bool
 }
 
-func parseObjectPath(path string) (r objectPathResult) {
+func parseObjectPath(mods ModifierDescriptor, path string) (r objectPathResult) {
 	for i := 0; i < len(path); i++ {
 		if path[i] == '|' {
 			r.part = path[:i]
@@ -986,7 +986,7 @@ func parseObjectPath(path string) (r objectPathResult) {
 		}
 		if path[i] == '.' {
 			r.part = path[:i]
-			if i < len(path)-1 && isDotPiperChar(path[i+1:]) {
+			if i < len(path)-1 && isDotPiperChar(mods, path[i+1:]) {
 				r.pipe = path[i+1:]
 				r.piped = true
 			} else {
@@ -1016,7 +1016,7 @@ func parseObjectPath(path string) (r objectPathResult) {
 						continue
 					} else if path[i] == '.' {
 						r.part = string(epart)
-						if i < len(path)-1 && isDotPiperChar(path[i+1:]) {
+						if i < len(path)-1 && isDotPiperChar(mods, path[i+1:]) {
 							r.pipe = path[i+1:]
 							r.piped = true
 						} else {
@@ -1095,7 +1095,7 @@ func parseSquash(json string, i int) (int, string) {
 func parseObject(mods ModifierDescriptor, c *parseContext, i int, path string) (int, bool) {
 	var pmatch, kesc, vesc, ok, hit bool
 	var key, val string
-	rp := parseObjectPath(path)
+	rp := parseObjectPath(mods, path)
 	if !rp.more && rp.piped {
 		c.pipe = rp.pipe
 		c.piped = true
@@ -1353,7 +1353,7 @@ func parseArray(mods ModifierDescriptor, c *parseContext, i int, path string) (i
 	var partidx int
 	var multires []byte
 	var queryIndexes []int
-	rp := parseArrayPath(path)
+	rp := parseArrayPath(mods, path)
 	if !rp.arrch {
 		n, ok := parseUint(rp.part)
 		if !ok {
@@ -1954,6 +1954,10 @@ type parseContext struct {
 // use the Valid function first.
 func Get(json, path string) Result {
 	return get(modifiers, json, path)
+}
+
+func (c *Context) Get(json, path string) Result {
+	return get(c.modifiers, json, path)
 }
 
 func get(mods ModifierDescriptor, json, path string) Result {
@@ -2753,6 +2757,14 @@ var modifiers = ModifierDescriptor{
 	"tostr":   modToStr,
 	"fromstr": modFromStr,
 	"group":   modGroup,
+}
+
+func GetBaseModifiers() ModifierDescriptor {
+	m := ModifierDescriptor{}
+	for k, v := range modifiers {
+		m[k] = v
+	}
+	return m
 }
 
 // Enables instance-based modifiers to be applied.
