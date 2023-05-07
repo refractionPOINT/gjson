@@ -1960,6 +1960,10 @@ func (c *Context) Get(json, path string) Result {
 	return get(c.modifiers, json, path)
 }
 
+func (c *Context) GetBytes(json []byte, path string) Result {
+	return getBytes(c.modifiers, json, path)
+}
+
 func get(mods ModifierDescriptor, json, path string) Result {
 	if len(path) > 1 {
 		if (path[0] == '@' && !DisableModifiers) || path[0] == '!' {
